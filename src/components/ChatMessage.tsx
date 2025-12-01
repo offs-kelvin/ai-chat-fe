@@ -5,9 +5,10 @@ interface ChatMessageProps {
   role: "user" | "assistant";
   content: string;
   isStreaming?: boolean;
+  onStreamComplete?: () => void;
 }
 
-const ChatMessage = ({ role, content, isStreaming = false }: ChatMessageProps) => {
+const ChatMessage = ({ role, content, isStreaming = false, onStreamComplete }: ChatMessageProps) => {
   const [displayedContent, setDisplayedContent] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
   const streamingRef = useRef(false);
@@ -33,8 +34,11 @@ const ChatMessage = ({ role, content, isStreaming = false }: ChatMessageProps) =
       }, 20); // Adjust speed here (lower = faster)
 
       return () => clearTimeout(timeout);
+    } else if (isStreaming && currentIndex >= content.length) {
+      // Streaming complete, notify parent
+      onStreamComplete?.();
     }
-  }, [currentIndex, content, isStreaming]);
+  }, [currentIndex, content, isStreaming, onStreamComplete]);
 
   const isUser = role === "user";
 
