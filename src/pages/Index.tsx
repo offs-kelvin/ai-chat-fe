@@ -132,8 +132,9 @@ const Index = () => {
 
     // Simulate AI response with streaming after a short delay
     setTimeout(() => {
+      const aiMessageId = `m-${Date.now()}-ai`;
       const aiMessage: Message = {
-        id: `m-${Date.now()}-ai`,
+        id: aiMessageId,
         role: "assistant",
         content: generateMockResponse(content),
         isStreaming: true,
@@ -151,6 +152,17 @@ const Index = () => {
         })
       );
     }, 500);
+  };
+
+  const handleStreamComplete = (messageId: string) => {
+    setConversations((prevConversations) =>
+      prevConversations.map((conv) => ({
+        ...conv,
+        messages: conv.messages.map((msg) =>
+          msg.id === messageId ? { ...msg, isStreaming: false } : msg
+        ),
+      }))
+    );
   };
 
   const generateMockResponse = (userMessage: string): string => {
@@ -184,6 +196,7 @@ const Index = () => {
                 role={message.role}
                 content={message.content}
                 isStreaming={message.isStreaming}
+                onStreamComplete={() => handleStreamComplete(message.id)}
               />
             ))}
             <div ref={chatEndRef} />
