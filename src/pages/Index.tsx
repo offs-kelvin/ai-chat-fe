@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
 import ChatMessage from "@/components/ChatMessage";
 import ChatInput from "@/components/ChatInput";
+import EmptyState from "@/components/EmptyState";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Message {
@@ -19,51 +20,11 @@ interface Conversation {
 }
 
 // Mock conversations
-const initialConversations: Conversation[] = [
-  {
-    id: "1",
-    title: "Welcome to ChatAI",
-    preview: "Getting started with your AI assistant",
-    messages: [
-      {
-        id: "m1",
-        role: "assistant",
-        content: "Hello! I'm your AI assistant. I'm here to help you with anything you need. Feel free to ask me questions, request information, or just have a conversation. How can I assist you today?",
-      },
-      {
-        id: "m2",
-        role: "user",
-        content: "What can you help me with?",
-      },
-      {
-        id: "m3",
-        role: "assistant",
-        content: "I can help you with a wide variety of tasks:\n\n• Answering questions on almost any topic\n• Writing and editing text\n• Explaining complex concepts\n• Brainstorming ideas\n• Providing recommendations\n• Analyzing information\n• Creative projects\n• And much more!\n\nWhat would you like to explore?",
-      },
-    ],
-  },
-  {
-    id: "2",
-    title: "Code Help",
-    preview: "React and TypeScript questions",
-    messages: [
-      {
-        id: "m4",
-        role: "user",
-        content: "How do I create a custom hook in React?",
-      },
-      {
-        id: "m5",
-        role: "assistant",
-        content: "Creating a custom hook in React is straightforward! Here's a simple example:\n\n```typescript\nimport { useState, useEffect } from 'react';\n\nfunction useWindowWidth() {\n  const [width, setWidth] = useState(window.innerWidth);\n\n  useEffect(() => {\n    const handleResize = () => setWidth(window.innerWidth);\n    window.addEventListener('resize', handleResize);\n    return () => window.removeEventListener('resize', handleResize);\n  }, []);\n\n  return width;\n}\n```\n\nKey points:\n1. Custom hooks must start with 'use'\n2. They can use other hooks inside\n3. They help reuse stateful logic across components\n\nWould you like me to explain more about custom hooks?",
-      },
-    ],
-  },
-];
+const initialConversations: Conversation[] = [];
 
 const Index = () => {
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
-  const [activeConversationId, setActiveConversationId] = useState<string>("1");
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -187,21 +148,24 @@ const Index = () => {
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
-        {/* Messages */}
-        <ScrollArea className="flex-1" ref={scrollAreaRef}>
-          <div className="max-w-4xl mx-auto py-8">
-            {activeConversation?.messages.map((message) => (
-              <ChatMessage
-                key={message.id}
-                role={message.role}
-                content={message.content}
-                isStreaming={message.isStreaming}
-                onStreamComplete={() => handleStreamComplete(message.id)}
-              />
-            ))}
-            <div ref={chatEndRef} />
-          </div>
-        </ScrollArea>
+        {!activeConversation || activeConversation.messages.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <ScrollArea className="flex-1" ref={scrollAreaRef}>
+            <div className="max-w-4xl mx-auto py-8">
+              {activeConversation.messages.map((message) => (
+                <ChatMessage
+                  key={message.id}
+                  role={message.role}
+                  content={message.content}
+                  isStreaming={message.isStreaming}
+                  onStreamComplete={() => handleStreamComplete(message.id)}
+                />
+              ))}
+              <div ref={chatEndRef} />
+            </div>
+          </ScrollArea>
+        )}
 
         {/* Input Area */}
         <ChatInput onSendMessage={handleSendMessage} />
